@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: pssg-ml-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production

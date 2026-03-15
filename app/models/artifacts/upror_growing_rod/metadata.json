@@ -1,0 +1,66 @@
+{
+  "display_name": "UPROR Risk \u2014 Growing Rod Surgery",
+  "description": "Predicts probability of unplanned return to operating room (UPROR) in early-onset scoliosis (EOS) patients undergoing growing rod surgery",
+  "version": "1.0.0",
+  "algorithm": "Logistic Regression",
+  "framework": "scikit-learn",
+  "features": [
+    {
+      "name": "Post-Index_Inferior_Attachments_Spine_Based",
+      "type": "binary",
+      "description": "Spine-based inferior attachments (1) vs pelvic hooks (0)"
+    },
+    {
+      "name": "Pre-Index_Height_cm",
+      "type": "continuous",
+      "description": "Patient height in cm"
+    },
+    {
+      "name": "Post-Index_Device_Type_VEPTR",
+      "type": "binary",
+      "description": "VEPTR device (1) vs other (0)"
+    },
+    {
+      "name": "Post-Index_Device_Type_TGR",
+      "type": "binary",
+      "description": "TGR device (1) vs other (0)"
+    },
+    {
+      "name": "Pre-Index_Kyphosis",
+      "type": "continuous",
+      "description": "Thoracic kyphosis angle in degrees"
+    },
+    {
+      "name": "age_at_surgery",
+      "type": "continuous",
+      "description": "Patient age in years at index surgery"
+    },
+    {
+      "name": "Post-Index_Number_of_Superior_Anchors",
+      "type": "continuous",
+      "description": "Number of superior anchor points"
+    },
+    {
+      "name": "Gender_Male",
+      "type": "binary",
+      "description": "Male (1) vs Female (0)"
+    }
+  ],
+  "metrics": {
+    "test_auc": 0.6502,
+    "cv_auc": 0.6566,
+    "brier_score": 0.2126,
+    "sensitivity": 0.5986,
+    "specificity": 0.6291,
+    "hosmer_lemeshow_p": 0.8049,
+    "optimal_threshold": 0.4028
+  },
+  "cohort": {
+    "total_patients": 2106,
+    "train_patients": 1685,
+    "test_patients": 421,
+    "upror_prevalence": 0.349
+  },
+  "last_updated": "2025-02-24",
+  "limitations": "Trained on PSSG database; excludes patients with rib-containing inferior attachments (n=175). AUC 0.65 indicates moderate discrimination. Model uses isotonic calibration (CalibratedClassifierCV)."
+}
