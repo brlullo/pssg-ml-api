@@ -6,6 +6,7 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
+from pydantic import ConfigDict, create_model
 
 
 ARTIFACTS_DIR = Path(__file__).parent / "artifacts"
@@ -68,6 +69,31 @@ class ModelRegistry:
             "metadata": metadata,
             "artifact": artifact,
         }
+
+    def make_request_model(self, model_name: str) -> type:
+        """Create a model-specific Pydantic request class with a pre-filled example."""
+        entry = self._models[model_name]
+        metadata = entry["metadata"]
+        feature_names = entry["feature_names"]
+
+        example_features: dict[str, float] = {}
+        for f in metadata.get("features", []):
+            fname = f["name"]
+            example_features[fname] = 1.0 if f.get("type") == "binary" else 0.0
+        if not example_features:
+            example_features = {name: 0.0 for name in feature_names}
+
+        class_name = (
+            "".join(w.capitalize() for w in model_name.split("_"))
+            + "PredictionRequest"
+        )
+        return create_model(
+            class_name,
+            __config__=ConfigDict(
+                json_schema_extra={"examples": [{"features": example_features}]}
+            ),
+            features=(dict[str, float], ...),
+        )
 
     def list_models(self) -> list[str]:
         return list(self._models.keys())

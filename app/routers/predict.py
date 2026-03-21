@@ -1,41 +1,27 @@
 import time
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import BackgroundTasks, HTTPException
 
 from app.logging.db import log_request
 from app.models.registry import registry
-from app.schemas.predict import PredictionRequest, PredictionResponse
-
-router = APIRouter(tags=["Predictions"])
+from app.schemas.predict import PredictionResponse
 
 
-@router.post("/predict/{model_name}", response_model=PredictionResponse)
-def predict(
-    model_name: str,
-    request: PredictionRequest,
-    background_tasks: BackgroundTasks,
-):
-    """Run inference on a loaded ML model.
+def make_predict_handler(model_name: str, request_model: type):
+    """Return a FastAPI route handler bound to a specific model."""
 
-    Provide feature values as a JSON object. Use GET /models/{model_name}
-    to see required features and their descriptions.
-    """
-    start = time.perf_counter()
-
-    if model_name not in registry.list_models():
-        raise HTTPException(
-            status_code=404,
-            detail=f"Model '{model_name}' not found. Available models: {registry.list_models()}",
+    async def predict(request: request_model, background_tasks: BackgroundTasks):
+        start = time.perf_counter()
+        try:
+            result = registry.predict(model_name, request.features)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        background_tasks.add_task(
+            log_request, model_name, f"/predict/{model_name}", elapsed_ms, 200
         )
+        return result
 
-    try:
-        result = registry.predict(model_name, request.features)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-
-    elapsed_ms = (time.perf_counter() - start) * 1000
-    background_tasks.add_task(
-        log_request, model_name, f"/predict/{model_name}", elapsed_ms, 200
-    )
-
-    return result
+    # Give each handler a unique name so FastAPI generates distinct operation IDs
+    predict.__name__ = f"predict_{model_name}"
+    return predict
