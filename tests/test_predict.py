@@ -12,7 +12,7 @@ VALID_FEATURES = {
 
 def test_predict_valid(client):
     response = client.post(
-        "/predict/upror_growing_rod", json={"features": VALID_FEATURES}
+        "/predict/upror_growing_rod", json=VALID_FEATURES
     )
     assert response.status_code == 200
     data = response.json()
@@ -25,15 +25,14 @@ def test_predict_valid(client):
 def test_predict_missing_features(client):
     incomplete = {"Post-Index_Inferior_Attachments_Spine_Based": 1.0}
     response = client.post(
-        "/predict/upror_growing_rod", json={"features": incomplete}
+        "/predict/upror_growing_rod", json=incomplete
     )
     assert response.status_code == 422
-    assert "Missing features" in response.json()["detail"]
 
 
 def test_predict_invalid_model(client):
     response = client.post(
-        "/predict/nonexistent_model", json={"features": VALID_FEATURES}
+        "/predict/nonexistent_model", json=VALID_FEATURES
     )
     assert response.status_code == 404
 
@@ -44,8 +43,8 @@ def test_predict_probability_range(client):
     high_risk["age_at_surgery"] = 3.0
     high_risk["Pre-Index_Kyphosis"] = 80.0
 
-    resp1 = client.post("/predict/upror_growing_rod", json={"features": VALID_FEATURES})
-    resp2 = client.post("/predict/upror_growing_rod", json={"features": high_risk})
+    resp1 = client.post("/predict/upror_growing_rod", json=VALID_FEATURES)
+    resp2 = client.post("/predict/upror_growing_rod", json=high_risk)
 
     assert resp1.status_code == 200
     assert resp2.status_code == 200

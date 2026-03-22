@@ -26,6 +26,8 @@ async def lifespan(app: FastAPI):
         if path in existing_paths:
             continue
         metadata = registry.get_metadata(model_name)
+        if metadata is None:
+            continue
         display_name = metadata.get("display_name", model_name)
         request_model = registry.make_request_model(model_name)
         handler = make_predict_handler(model_name, request_model)

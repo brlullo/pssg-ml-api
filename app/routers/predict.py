@@ -13,7 +13,7 @@ def make_predict_handler(model_name: str, request_model: type):
     async def predict(request: request_model, background_tasks: BackgroundTasks):
         start = time.perf_counter()
         try:
-            result = registry.predict(model_name, request.features)
+            result = registry.predict(model_name, request.model_dump())
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e))
         elapsed_ms = (time.perf_counter() - start) * 1000
@@ -23,5 +23,5 @@ def make_predict_handler(model_name: str, request_model: type):
         return result
 
     # Give each handler a unique name so FastAPI generates distinct operation IDs
-    predict.__name__ = f"predict_{model_name}"
+    predict.__name__ = model_name
     return predict
