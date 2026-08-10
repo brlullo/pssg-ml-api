@@ -1,12 +1,14 @@
 import json
 import pickle
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import joblib
 import numpy as np
 import pandas as pd
 from pydantic import Field, create_model
+
+from app.models.rms_lrm import RmsLrmScenarioModel
 
 
 ARTIFACTS_DIR = Path(__file__).parent / "artifacts"
@@ -34,6 +36,18 @@ class ModelRegistry:
 
         with open(metadata_path) as f:
             metadata = json.load(f)
+
+        # JSON-exported R model (rms::lrm) — scored in pure Python
+        json_file = model_dir / "model.json"
+        if json_file.exists():
+            predictor = RmsLrmScenarioModel(json_file)
+            self._models[model_name] = {
+                "backend": "rms_lrm",
+                "predictor": predictor,
+                "feature_names": predictor.feature_names,
+                "metadata": metadata,
+            }
+            return
 
         # Load the model file (.pkl or .joblib)
         model_file = model_dir / "model.pkl"
@@ -63,6 +77,7 @@ class ModelRegistry:
             )
 
         self._models[model_name] = {
+            "backend": "sklearn",
             "model": model,
             "scaler": scaler,
             "feature_names": feature_names,
@@ -81,6 +96,13 @@ class ModelRegistry:
         for name in feature_names:
             meta = feature_meta.get(name, {})
             desc = meta.get("description", "")
+            if meta.get("type") == "categorical":
+                options = meta["options"]
+                fields[name] = (
+                    Literal[tuple(options)],
+                    Field(description=desc, examples=[options[0]]),
+                )
+                continue
             if "example_value" in meta:
                 example = meta["example_value"]
             elif meta.get("type") == "binary":
@@ -108,10 +130,17 @@ class ModelRegistry:
             for name, entry in self._models.items()
         ]
 
-    def predict(self, model_name: str, features: dict[str, float]) -> dict:
+    def predict(self, model_name: str, features: dict[str, Any]) -> dict:
         entry = self._models.get(model_name)
         if entry is None:
             raise KeyError(f"Model '{model_name}' not found")
+
+        if entry["backend"] == "rms_lrm":
+            return entry["predictor"].predict(
+                features,
+                model_name,
+                entry["metadata"].get("version", "unknown"),
+            )
 
         feature_names = entry["feature_names"]
         missing = [f for f in feature_names if f not in features]

@@ -20,6 +20,8 @@ def isolate_log_db(tmp_path, monkeypatch):
     """
     monkeypatch.setattr(settings, "LOG_DB_PATH", str(tmp_path / "test_logs.db"))
     monkeypatch.setattr(settings, "DATABASE_URL", "")
+    # A developer's .env may set ADMIN_API_KEY; tests assume the unset default
+    monkeypatch.setattr(settings, "ADMIN_API_KEY", "")
 
 
 @pytest.fixture()

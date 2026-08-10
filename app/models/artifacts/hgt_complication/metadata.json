@@ -1,0 +1,84 @@
+{
+  "display_name": "Complication Risk — Halo-Gravity Traction (HGT)",
+  "description": "Predicts 2-year probability of implant-related complication in early-onset scoliosis (EOS) patients undergoing growing rod treatment, comparing risk with vs. without preoperative halo-gravity traction",
+  "version": "1.0.0",
+  "algorithm": "Proportional-odds ordinal logistic regression with restricted cubic splines",
+  "framework": "R rms (exported to JSON, scored in Python)",
+  "prediction_type": "scenario_comparison",
+  "features": [
+    {
+      "name": "coronal_deformity",
+      "type": "continuous",
+      "description": "Baseline maximum scoliosis (coronal) curve in degrees [0-140]",
+      "example_value": 70.0
+    },
+    {
+      "name": "max_kyphosis",
+      "type": "continuous",
+      "description": "Baseline maximum kyphosis in degrees [40-180]; the model uses kyphosis in excess of 45°",
+      "example_value": 52.0
+    },
+    {
+      "name": "age_years",
+      "type": "continuous",
+      "description": "Age at index surgery in years",
+      "example_value": 6.5
+    },
+    {
+      "name": "gender",
+      "type": "categorical",
+      "description": "Patient gender",
+      "options": ["Male", "Female"]
+    },
+    {
+      "name": "race",
+      "type": "categorical",
+      "description": "Patient race",
+      "options": ["White", "Black", "Other"]
+    },
+    {
+      "name": "weight_kg",
+      "type": "continuous",
+      "description": "Patient weight in kilograms",
+      "example_value": 18.3
+    },
+    {
+      "name": "etiology",
+      "type": "categorical",
+      "description": "EOS etiology",
+      "options": ["Congenital", "Idiopathic", "Neuromuscular", "Syndromic/Other"]
+    },
+    {
+      "name": "ambulatory_status",
+      "type": "categorical",
+      "description": "Ambulatory status at baseline",
+      "options": ["Ambulatory", "Non-Ambulatory", "Therapeutic"]
+    },
+    {
+      "name": "pelvic_attachments",
+      "type": "categorical",
+      "description": "Pelvic attachments used",
+      "options": ["No", "Yes"]
+    },
+    {
+      "name": "rod_number",
+      "type": "categorical",
+      "description": "Rod configuration",
+      "options": ["Unilateral", "Bilateral"]
+    },
+    {
+      "name": "device_type",
+      "type": "categorical",
+      "description": "Growth-friendly device type",
+      "options": ["VEPTR/TGR", "MCGR"]
+    }
+  ],
+  "metrics": {
+    "c_statistic": 0.7044
+  },
+  "cohort": {
+    "total_patients": 1606
+  },
+  "last_updated": "2026-08-10",
+  "limitations": "Developed by VUMC Biostatistics from the PSSG database (n=1,606, multiple imputation for missing data). Reports probability of ANY implant-related complication at a fixed 2-year (730-day) horizon; the underlying ordinal model also distinguishes severity levels not exposed here. Both treatment scenarios (with and without preoperative halo-gravity traction) are returned per request with 95% confidence intervals. C-statistic 0.70 indicates moderate discrimination. Hosted with the authors' permission; reference implementation: https://vumcbiostat.shinyapps.io/hgtmodel/"
+}

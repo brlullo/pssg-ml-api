@@ -13,7 +13,7 @@ from app.logging.db import get_usage_stats, init_db, log_request
 from app.models.registry import registry
 from app.routers import models_info
 from app.routers.predict import make_predict_handler
-from app.schemas.predict import PredictionResponse
+from app.schemas.predict import PredictionResponse, ScenarioPredictionResponse
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -39,11 +39,16 @@ async def lifespan(app: FastAPI):
         display_name = metadata.get("display_name", model_name)
         request_model = registry.make_request_model(model_name)
         handler = make_predict_handler(model_name, request_model)
+        response_model = (
+            ScenarioPredictionResponse
+            if metadata.get("prediction_type") == "scenario_comparison"
+            else PredictionResponse
+        )
         app.add_api_route(
             path,
             handler,
             methods=["POST"],
-            response_model=PredictionResponse,
+            response_model=response_model,
             tags=[display_name],
             summary=f"Predict — {display_name}",
             description=metadata.get("description", ""),

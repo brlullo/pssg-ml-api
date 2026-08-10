@@ -1,0 +1,55 @@
+{
+  "_source": "Captured from https://vumcbiostat.shinyapps.io/hgtmodel/ on 2026-08-10 ('1+ UPRORs' row). Probabilities and 95% CIs as displayed (3 decimals). with_ci omitted where the app row was truncated during capture.",
+  "cases": [
+    {
+      "inputs": {"coronal_deformity": 70, "max_kyphosis": 52, "age_years": 6, "gender": "Male", "race": "White", "weight_kg": 20, "etiology": "Idiopathic", "ambulatory_status": "Ambulatory", "pelvic_attachments": "No", "rod_number": "Unilateral", "device_type": "VEPTR/TGR"},
+      "without": {"p": 0.089, "lo": 0.033, "hi": 0.218},
+      "with": {"p": 0.056, "lo": 0.015, "hi": 0.185}
+    },
+    {
+      "inputs": {"coronal_deformity": 100, "max_kyphosis": 52, "age_years": 6, "gender": "Male", "race": "White", "weight_kg": 20, "etiology": "Idiopathic", "ambulatory_status": "Ambulatory", "pelvic_attachments": "No", "rod_number": "Unilateral", "device_type": "VEPTR/TGR"},
+      "without": {"p": 0.100, "lo": 0.036, "hi": 0.245},
+      "with": {"p": 0.101, "lo": 0.030, "hi": 0.288}
+    },
+    {
+      "inputs": {"coronal_deformity": 70, "max_kyphosis": 40, "age_years": 6, "gender": "Male", "race": "White", "weight_kg": 20, "etiology": "Idiopathic", "ambulatory_status": "Ambulatory", "pelvic_attachments": "No", "rod_number": "Unilateral", "device_type": "VEPTR/TGR"},
+      "without": {"p": 0.077, "lo": 0.028, "hi": 0.195},
+      "with": {"p": 0.048}
+    },
+    {
+      "inputs": {"coronal_deformity": 70, "max_kyphosis": 60, "age_years": 6, "gender": "Male", "race": "White", "weight_kg": 20, "etiology": "Idiopathic", "ambulatory_status": "Ambulatory", "pelvic_attachments": "No", "rod_number": "Unilateral", "device_type": "VEPTR/TGR"},
+      "without": {"p": 0.103, "lo": 0.038, "hi": 0.248},
+      "with": {"p": 0.064}
+    },
+    {
+      "inputs": {"coronal_deformity": 70, "max_kyphosis": 100, "age_years": 6, "gender": "Male", "race": "White", "weight_kg": 20, "etiology": "Idiopathic", "ambulatory_status": "Ambulatory", "pelvic_attachments": "No", "rod_number": "Unilateral", "device_type": "VEPTR/TGR"},
+      "without": {"p": 0.149, "lo": 0.055, "hi": 0.348},
+      "with": {"p": 0.041}
+    },
+    {
+      "inputs": {"coronal_deformity": 70, "max_kyphosis": 140, "age_years": 6, "gender": "Male", "race": "White", "weight_kg": 20, "etiology": "Idiopathic", "ambulatory_status": "Ambulatory", "pelvic_attachments": "No", "rod_number": "Unilateral", "device_type": "VEPTR/TGR"},
+      "without": {"p": 0.188, "lo": 0.053, "hi": 0.487},
+      "with": {"p": 0.016}
+    },
+    {
+      "inputs": {"coronal_deformity": 30, "max_kyphosis": 45, "age_years": 2, "gender": "Female", "race": "Black", "weight_kg": 10, "etiology": "Congenital", "ambulatory_status": "Non-Ambulatory", "pelvic_attachments": "Yes", "rod_number": "Bilateral", "device_type": "MCGR"},
+      "without": {"p": 0.052, "lo": 0.019, "hi": 0.134},
+      "with": {"p": 0.078, "lo": 0.008, "hi": 0.481}
+    },
+    {
+      "inputs": {"coronal_deformity": 120, "max_kyphosis": 90, "age_years": 12, "gender": "Male", "race": "Other", "weight_kg": 40, "etiology": "Neuromuscular", "ambulatory_status": "Therapeutic", "pelvic_attachments": "No", "rod_number": "Unilateral", "device_type": "VEPTR/TGR"},
+      "without": {"p": 0.064, "lo": 0.015, "hi": 0.237},
+      "with": {"p": 0.065, "lo": 0.013, "hi": 0.273}
+    },
+    {
+      "inputs": {"coronal_deformity": 55, "max_kyphosis": 70, "age_years": 8, "gender": "Female", "race": "White", "weight_kg": 25, "etiology": "Syndromic/Other", "ambulatory_status": "Ambulatory", "pelvic_attachments": "Yes", "rod_number": "Unilateral", "device_type": "MCGR"},
+      "without": {"p": 0.076, "lo": 0.030, "hi": 0.182},
+      "with": {"p": 0.054, "lo": 0.014, "hi": 0.190}
+    },
+    {
+      "inputs": {"coronal_deformity": 95, "max_kyphosis": 120, "age_years": 4.5, "gender": "Male", "race": "Black", "weight_kg": 15, "etiology": "Idiopathic", "ambulatory_status": "Non-Ambulatory", "pelvic_attachments": "No", "rod_number": "Bilateral", "device_type": "MCGR"},
+      "without": {"p": 0.152, "lo": 0.055, "hi": 0.353},
+      "with": {"p": 0.033, "lo": 0.006, "hi": 0.163}
+    }
+  ]
+}
