@@ -126,10 +126,12 @@ function renderForm(m) {
     // Curated layout: named groups of display fields, each either a number
     // input bound to one feature or a select whose options set feature values
     for (const group of m.ui.groups) {
-      const heading = document.createElement("h4");
-      heading.className = "field-group-title";
-      heading.textContent = group.title;
-      formFields.appendChild(heading);
+      if (group.title) {
+        const heading = document.createElement("h4");
+        heading.className = "field-group-title";
+        heading.textContent = group.title;
+        formFields.appendChild(heading);
+      }
       for (const df of group.fields) {
         const wrap = document.createElement("div");
         wrap.className = "field";
@@ -143,6 +145,7 @@ function renderForm(m) {
             const o = document.createElement("option");
             o.textContent = opt.label;
             o.value = JSON.stringify(opt.set);
+            if (opt.default) o.selected = true;
             input.appendChild(o);
           }
           input.dataset.set = "1";
@@ -282,20 +285,29 @@ form.addEventListener("submit", async (e) => {
 
 function showScenarioResult(r) {
   scenarioGrid.innerHTML = "";
-  for (const s of r.scenarios) {
-    const card = document.createElement("div");
-    card.className = "scenario-card";
-    card.innerHTML =
-      "<p class='scenario-label'></p><p class='scenario-pct'></p>" +
-      "<p class='scenario-ci'></p><div class='bar-track'><div class='bar-fill'></div></div>";
-    card.querySelector(".scenario-label").textContent = s.label;
-    card.querySelector(".scenario-pct").textContent = fmtPct(s.probability);
-    card.querySelector(".scenario-ci").textContent =
-      "95% CI " + fmtPct(s.ci_lower) + " – " + fmtPct(s.ci_upper);
-    card.querySelector(".bar-fill").style.width =
-      Math.min(100, s.probability * 100) + "%";
-    scenarioGrid.appendChild(card);
+  if (r.scenarios[0].by_level) {
+    renderScenarioTable(r);
+  } else {
+    for (const s of r.scenarios) {
+      const card = document.createElement("div");
+      card.className = "scenario-card";
+      card.innerHTML =
+        "<p class='scenario-label'></p><p class='scenario-pct'></p>" +
+        "<p class='scenario-ci'></p><div class='bar-track'><div class='bar-fill'></div></div>";
+      card.querySelector(".scenario-label").textContent = s.label;
+      card.querySelector(".scenario-pct").textContent = fmtPct(s.probability);
+      card.querySelector(".scenario-ci").textContent =
+        "95% CI " + fmtPct(s.ci_lower) + " – " + fmtPct(s.ci_upper);
+      card.querySelector(".bar-fill").style.width =
+        Math.min(100, s.probability * 100) + "%";
+      scenarioGrid.appendChild(card);
+    }
   }
+
+  const note = document.getElementById("scenario-note");
+  const noteText = currentModel && currentModel.ui && currentModel.ui.result_note;
+  note.textContent = noteText || "";
+  note.hidden = !noteText;
 
   const without = r.scenarios.find((s) => s.label.startsWith("Without"));
   const withS = r.scenarios.find((s) => !s.label.startsWith("Without"));
@@ -311,6 +323,47 @@ function showScenarioResult(r) {
   }
   scenarioResultEl.hidden = false;
   scenarioResultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function renderScenarioTable(r) {
+  // Shiny-style table: one row per cumulative outcome level, columns for
+  // each scenario (probability + 95% CI) and the between-scenario difference
+  const labels = (currentModel.ui && currentModel.ui.level_labels) || {};
+  const [a, b] = r.scenarios; // a = Without HGT, b = With HGT
+  const wrap = document.createElement("div");
+  wrap.className = "table-scroll";
+  const table = document.createElement("table");
+  table.className = "scenario-table";
+
+  const head = table.insertRow();
+  for (const h of ["", "Predicted Probability — " + a.label,
+                   "Predicted Probability — " + b.label,
+                   b.label + " vs. " + a.label]) {
+    const th = document.createElement("th");
+    th.textContent = h;
+    head.appendChild(th);
+  }
+
+  for (let i = 0; i < a.by_level.length; i++) {
+    const la = a.by_level[i], lb = b.by_level[i];
+    const row = table.insertRow();
+    const name = row.insertCell();
+    name.textContent = labels[la.level] || la.level;
+    name.className = "level-name";
+    for (const lv of [la, lb]) {
+      const cell = row.insertCell();
+      cell.innerHTML = "<strong></strong><br><span class='ci'></span>";
+      cell.querySelector("strong").textContent = lv.probability.toFixed(3);
+      cell.querySelector(".ci").textContent =
+        "(" + lv.ci_lower.toFixed(3) + ", " + lv.ci_upper.toFixed(3) + ")";
+    }
+    const diff = row.insertCell();
+    const d = lb.probability - la.probability;
+    diff.textContent = (d > 0 ? "+" : "") + d.toFixed(3);
+    diff.className = d < 0 ? "diff-lower" : "diff-higher";
+  }
+  wrap.appendChild(table);
+  scenarioGrid.appendChild(wrap);
 }
 
 function showResult(r) {

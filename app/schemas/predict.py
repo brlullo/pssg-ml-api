@@ -9,11 +9,23 @@ class PredictionResponse(BaseModel):
     model_version: str
 
 
-class Scenario(BaseModel):
-    label: str
+class LevelPrediction(BaseModel):
+    """Cumulative probability for one ordinal outcome level, e.g. '1+' events."""
+
+    level: str
     probability: float
     ci_lower: float
     ci_upper: float
+
+
+class Scenario(BaseModel):
+    label: str
+    # Primary result: probability of any event (lowest cumulative level)
+    probability: float
+    ci_lower: float
+    ci_upper: float
+    # Full cumulative breakdown for ordinal models (1+, 2+, 3+ events)
+    by_level: list[LevelPrediction] | None = None
 
 
 class ScenarioPredictionResponse(BaseModel):

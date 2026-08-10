@@ -73,6 +73,53 @@
       "options": ["VEPTR/TGR", "MCGR"]
     }
   ],
+  "ui": {
+    "groups": [
+      {
+        "title": "",
+        "fields": [
+          {"label": "Age (years) [0-18]", "control": "number", "feature": "age_years"},
+          {"label": "Gender", "control": "select", "options": [
+            {"label": "Male", "set": {"gender": "Male"}},
+            {"label": "Female", "set": {"gender": "Female"}}
+          ]},
+          {"label": "Race", "control": "select", "options": [
+            {"label": "White", "set": {"race": "White"}},
+            {"label": "Black", "set": {"race": "Black"}},
+            {"label": "Other", "set": {"race": "Other"}}
+          ]},
+          {"label": "Weight (kg)", "control": "number", "feature": "weight_kg"},
+          {"label": "Etiology", "control": "select", "options": [
+            {"label": "Idiopathic", "set": {"etiology": "Idiopathic"}},
+            {"label": "Congenital", "set": {"etiology": "Congenital"}},
+            {"label": "Neuromuscular", "set": {"etiology": "Neuromuscular"}},
+            {"label": "Syndromic/Other", "set": {"etiology": "Syndromic/Other"}}
+          ]},
+          {"label": "Ambulatory Status", "control": "select", "options": [
+            {"label": "Ambulatory", "set": {"ambulatory_status": "Ambulatory"}},
+            {"label": "Non-Ambulatory", "set": {"ambulatory_status": "Non-Ambulatory"}},
+            {"label": "Therapeutic Ambulator", "set": {"ambulatory_status": "Therapeutic"}}
+          ]},
+          {"label": "Pelvic Attachments", "control": "select", "options": [
+            {"label": "Yes", "set": {"pelvic_attachments": "Yes"}},
+            {"label": "No", "set": {"pelvic_attachments": "No"}, "default": true}
+          ]},
+          {"label": "Device Type", "control": "select", "options": [
+            {"label": "VEPTR/TGR", "set": {"device_type": "VEPTR/TGR"}},
+            {"label": "MCGR", "set": {"device_type": "MCGR"}}
+          ]},
+          {"label": "Rod Number", "control": "select", "options": [
+            {"label": "Unilateral", "set": {"rod_number": "Unilateral"}},
+            {"label": "Bilateral", "set": {"rod_number": "Bilateral"}}
+          ]},
+          {"label": "Baseline Max Scoliosis (degrees) [0-140]", "control": "number", "feature": "coronal_deformity"},
+          {"label": "Baseline Max Kyphosis (degrees) [40-180]", "control": "number", "feature": "max_kyphosis"}
+        ]
+      }
+    ],
+    "level_labels": {"1+": "1+ UPRORs", "2+": "2+ UPRORs", "3+": "3+ UPRORs"},
+    "result_note": "Presented are predicted probabilities of UPROR (unplanned return to operating room due to implant complication) within 2 years, with 95% confidence intervals. For the difference column, values below 0 represent reduced probability of UPROR with preoperative halo-gravity traction (>7 days). Reference: Paulson A, Nian H, Martus J, Smith J, Sponseller P, Emans J, Welborn M, PSSG, Louer C. SRS Annual Meeting, 2024."
+  },
   "metrics": {
     "c_statistic": 0.7044
   },

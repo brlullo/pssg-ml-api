@@ -258,6 +258,31 @@ details#model-info td:first-child { color: var(--text-muted); white-space: nowra
 
 #scenario-interpretation { margin: 1.2rem 0 0; font-size: 0.95rem; }
 
+/* Shiny-style multi-level scenario table */
+.table-scroll { overflow-x: auto; }
+.scenario-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+.scenario-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--accent-dark);
+  padding: 0.5rem 0.8rem;
+  border-bottom: 2px solid var(--border);
+  vertical-align: bottom;
+}
+.scenario-table td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.scenario-table .level-name { font-weight: 600; white-space: nowrap; }
+.scenario-table .ci { font-size: 0.8rem; color: var(--text-muted); }
+.scenario-table .diff-lower { color: #1a7a3a; font-weight: 600; }
+.scenario-table .diff-higher { color: var(--text); font-weight: 600; }
+
 @media (max-width: 480px) {
   .scenario-grid { grid-template-columns: 1fr; }
 }

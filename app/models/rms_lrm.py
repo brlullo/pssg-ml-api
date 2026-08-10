@@ -42,6 +42,9 @@ class RmsLrmScenarioModel:
         self.spec = m
         self.intercept_name = m["any_complication_intercept"]
         self.intercept = m["intercepts"][self.intercept_name]
+        # All cumulative-probability intercepts, ordered: P(Y>=1), P(Y>=2), ...
+        self.all_intercepts = list(m["intercepts"].items())
+        self.ylevels = m["ylevels"]
         self.coef = m["coefficients"]  # ordered dict: column name -> beta
         self.cov_names: list[str] = m["covariance"]["names"]
         self.cov = np.array(m["covariance"]["matrix"])
@@ -97,16 +100,17 @@ class RmsLrmScenarioModel:
                 x.append(cols[name])
         return np.array(x)
 
-    def _score_scenario(self, features: dict[str, Any], scenario_level: str) -> dict:
-        x = self._design_vector(features, scenario_level)
+    def _score_level(
+        self, x: np.ndarray, intercept_name: str, intercept: float
+    ) -> dict:
         beta = np.array(list(self.coef.values()))
-        lp = self.intercept + float(x @ beta)
+        lp = intercept + float(x @ beta)
 
         # Delta-method CI: z aligned by name to the covariance matrix
         by_name = dict(zip(self.coef.keys(), x))
         z = np.array(
             [
-                1.0 if name == self.intercept_name
+                1.0 if name == intercept_name
                 else by_name.get(name, 0.0)  # other intercepts -> 0
                 for name in self.cov_names
             ]
@@ -117,6 +121,17 @@ class RmsLrmScenarioModel:
             "ci_lower": round(_expit(lp - Z_975 * se), 4),
             "ci_upper": round(_expit(lp + Z_975 * se), 4),
         }
+
+    def _score_scenario(self, features: dict[str, Any], scenario_level: str) -> dict:
+        x = self._design_vector(features, scenario_level)
+        # Primary result = P(Y >= first non-reference level), i.e. any event;
+        # by_level carries every cumulative probability (matches the Shiny app)
+        primary = self._score_level(x, self.intercept_name, self.intercept)
+        by_level = [
+            {"level": f"{self.ylevels[i + 1]}+", **self._score_level(x, name, value)}
+            for i, (name, value) in enumerate(self.all_intercepts)
+        ]
+        return {**primary, "by_level": by_level}
 
     def predict(
         self, features: dict[str, Any], model_name: str, model_version: str
