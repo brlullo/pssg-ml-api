@@ -11,6 +11,9 @@ const formFields = document.getElementById("form-fields");
 const formError = document.getElementById("form-error");
 const submitButton = document.getElementById("submit-button");
 const resultEl = document.getElementById("result");
+const scenarioResultEl = document.getElementById("scenario-result");
+const scenarioGrid = document.getElementById("scenario-grid");
+const scenarioInterpretation = document.getElementById("scenario-interpretation");
 const resultPct = document.getElementById("result-pct");
 const resultBar = document.getElementById("result-bar");
 const resultThresholdMark = document.getElementById("result-threshold-mark");
@@ -74,6 +77,7 @@ async function showDetail(name) {
   renderForm(currentModel.features);
 
   resultEl.hidden = true;
+  scenarioResultEl.hidden = true;
   formError.hidden = true;
   listEl.hidden = true;
   detailEl.hidden = false;
@@ -87,6 +91,7 @@ function renderInfo(m) {
     ["Algorithm", m.algorithm + " (" + m.framework + ")"],
     ["Version", m.version + (m.last_updated ? " · updated " + m.last_updated : "")],
     ["Test AUC", met.test_auc],
+    ["C-statistic", met.c_statistic],
     ["Sensitivity / Specificity",
       met.sensitivity != null ? met.sensitivity + " / " + met.specificity : null],
     ["Decision threshold", met.optimal_threshold != null ? fmtPct(met.optimal_threshold) : null],
@@ -141,6 +146,15 @@ function renderForm(features) {
         opt.value = value;
         input.appendChild(opt);
       }
+    } else if (f.type === "categorical") {
+      input = document.createElement("select");
+      for (const option of f.options || []) {
+        const opt = document.createElement("option");
+        opt.textContent = option;
+        opt.value = option;
+        input.appendChild(opt);
+      }
+      input.dataset.kind = "categorical";
     } else {
       input = document.createElement("input");
       input.type = "number";
@@ -160,6 +174,7 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   formError.hidden = true;
   resultEl.hidden = true;
+  scenarioResultEl.hidden = true;
 
   const features = {};
   for (const input of formFields.querySelectorAll("[data-feature]")) {
@@ -170,7 +185,8 @@ form.addEventListener("submit", async (e) => {
       input.focus();
       return;
     }
-    features[input.dataset.feature] = Number(input.value);
+    features[input.dataset.feature] =
+      input.dataset.kind === "categorical" ? input.value : Number(input.value);
   }
 
   submitButton.disabled = true;
@@ -206,7 +222,41 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
+function showScenarioResult(r) {
+  scenarioGrid.innerHTML = "";
+  for (const s of r.scenarios) {
+    const card = document.createElement("div");
+    card.className = "scenario-card";
+    card.innerHTML =
+      "<p class='scenario-label'></p><p class='scenario-pct'></p>" +
+      "<p class='scenario-ci'></p><div class='bar-track'><div class='bar-fill'></div></div>";
+    card.querySelector(".scenario-label").textContent = s.label;
+    card.querySelector(".scenario-pct").textContent = fmtPct(s.probability);
+    card.querySelector(".scenario-ci").textContent =
+      "95% CI " + fmtPct(s.ci_lower) + " – " + fmtPct(s.ci_upper);
+    card.querySelector(".bar-fill").style.width =
+      Math.min(100, s.probability * 100) + "%";
+    scenarioGrid.appendChild(card);
+  }
+
+  const without = r.scenarios.find((s) => s.label.startsWith("Without"));
+  const withS = r.scenarios.find((s) => !s.label.startsWith("Without"));
+  if (without && withS) {
+    const diff = (without.probability - withS.probability) * 100;
+    scenarioInterpretation.textContent =
+      diff > 0
+        ? "The model predicts an absolute risk reduction of " + diff.toFixed(1) +
+          " percentage points with preoperative halo-gravity traction for this patient. " +
+          "(Model: " + r.model_name + " v" + r.model_version + ")"
+        : "The model does not predict a risk reduction with preoperative halo-gravity " +
+          "traction for this patient. (Model: " + r.model_name + " v" + r.model_version + ")";
+  }
+  scenarioResultEl.hidden = false;
+  scenarioResultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
 function showResult(r) {
+  if (r.scenarios) return showScenarioResult(r);
   resultPct.textContent = fmtPct(r.probability);
   resultBar.style.width = Math.min(100, r.probability * 100) + "%";
   resultThresholdMark.style.left = Math.min(100, r.threshold * 100) + "%";

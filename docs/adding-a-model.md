@@ -1,12 +1,17 @@
 # Adding a model to the PSSG ML API
 
-Adding a model requires **no code changes**. The registry auto-discovers every
-subfolder of `app/models/artifacts/` at startup, and the web UI auto-generates
-its input form from the model's metadata. You only need two files:
+The registry auto-discovers every subfolder of `app/models/artifacts/` at
+startup, and the web UI auto-generates its input form from the model's
+metadata. Two backends are supported:
+
+- **scikit-learn pickles** (`model.pkl` / `model.joblib`) — no code changes
+  needed; see below.
+- **R rms models exported to JSON** (`model.json`) — for models fitted with
+  `rms::lrm`; see "Backend 2" at the end.
 
 ```
 app/models/artifacts/<model_name>/
-├── model.pkl        (or model.joblib)
+├── model.pkl        (or model.joblib, or model.json for rms models)
 └── metadata.json
 ```
 
@@ -117,3 +122,36 @@ uvicorn app.main:app --reload  # then check:
 
 Commit the folder (model pickles in `app/models/artifacts/` are tracked in
 git) and push — Render redeploys and the model is live.
+
+## Backend 2: R rms models exported to JSON
+
+For models fitted in R with `rms::lrm` (e.g., via `fit.mult.impute`), no R
+runtime is needed in production. The model is exported once to `model.json`
+(coefficients, spline knots, factor levels, covariance matrix) and scored in
+pure Python by `app/models/rms_lrm.py` — including restricted cubic splines,
+interactions, and delta-method 95% CIs.
+
+Workflow (see `scripts/extract_hgt_model.R` + `scripts/build_model_json.py`
+for the working example):
+
+1. Run the extraction R script on the `.rds` file (base R only — a throwaway
+   conda env with `r-base` suffices).
+2. Run the assembler to produce `model.json`. Define the API name mapping
+   there: R variable names (which may contain dots) map to clean snake_case
+   API names, and factor-level spellings can be corrected for display while
+   the scorer matches the original R levels by position.
+3. Write `metadata.json` with `prediction_type` set appropriately:
+   - `"scenario_comparison"` — the response contains per-scenario
+     probabilities with CIs (e.g., with vs. without a treatment); the UI
+     renders side-by-side cards.
+   - omit / `"binary_threshold"` — standard single-probability response.
+   Categorical features use `"type": "categorical"` with an `"options"` list
+   (rendered as dropdowns in the UI and enums in Swagger).
+4. **Validate against the authoritative R implementation.** Capture a set of
+   diverse cases from the original Shiny app (or `rms::Predict` output) into
+   `tests/fixtures/`, and add a golden test asserting agreement within
+   display-rounding tolerance. Watch for input preprocessing done by the app
+   outside the model — e.g., the HGT model's Shiny app feeds
+   `max(kyphosis − 45, 0)` to the `Sagittal.deformity` variable and predicts
+   at `days.from.surgery = 0`; both were discovered only through golden
+   testing.
