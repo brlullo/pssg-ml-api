@@ -24,7 +24,7 @@ def test_usage_requires_key_when_configured(client, monkeypatch):
 
 def test_failed_predict_requests_are_logged(client):
     """The middleware must log non-200 responses with their real status code."""
-    response = client.post("/predict/nonexistent_model", json={"features": {}})
+    response = client.post("/predict/nonexistent_model", json={})
     assert response.status_code == 404
 
     conn = sqlite3.connect(settings.LOG_DB_PATH)
@@ -49,7 +49,7 @@ def test_successful_predict_requests_are_logged(client):
         "Post-Index_Number_of_Superior_Anchors": 4,
         "Gender_Male": 1,
     }
-    response = client.post("/predict/upror_growing_rod", json={"features": features})
+    response = client.post("/predict/upror_growing_rod", json=features)
     assert response.status_code == 200
 
     conn = sqlite3.connect(settings.LOG_DB_PATH)

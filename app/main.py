@@ -11,7 +11,9 @@ from starlette.background import BackgroundTask
 from app.config import settings
 from app.logging.db import get_usage_stats, init_db, log_request
 from app.models.registry import registry
-from app.routers import models_info, predict
+from app.routers import models_info
+from app.routers.predict import make_predict_handler
+from app.schemas.predict import PredictionResponse
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -21,6 +23,32 @@ async def lifespan(app: FastAPI):
     registry.load_all()
     loaded = registry.list_models()
     print(f"Loaded {len(loaded)} model(s): {loaded}")
+
+    # Register a dedicated prediction endpoint for every loaded model.
+    # Each endpoint gets its own Swagger entry, display name, description,
+    # and a pre-filled example request body derived from the model's metadata.
+    # getattr: app.routes can contain mount/router entries without a .path
+    existing_paths = {getattr(route, "path", None) for route in app.routes}
+    for model_name in loaded:
+        path = f"/predict/{model_name}"
+        if path in existing_paths:
+            continue
+        metadata = registry.get_metadata(model_name)
+        if metadata is None:
+            continue
+        display_name = metadata.get("display_name", model_name)
+        request_model = registry.make_request_model(model_name)
+        handler = make_predict_handler(model_name, request_model)
+        app.add_api_route(
+            path,
+            handler,
+            methods=["POST"],
+            response_model=PredictionResponse,
+            tags=[display_name],
+            summary=f"Predict — {display_name}",
+            description=metadata.get("description", ""),
+        )
+
     try:
         init_db()
     except Exception as e:
@@ -72,7 +100,6 @@ async def log_predict_requests(request: Request, call_next):
     return response
 
 
-app.include_router(predict.router)
 app.include_router(models_info.router)
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

@@ -24,5 +24,6 @@ def isolate_log_db(tmp_path, monkeypatch):
 
 @pytest.fixture()
 def client():
+    # The lifespan context loads all models and registers per-model routes.
     with TestClient(app) as c:
         yield c

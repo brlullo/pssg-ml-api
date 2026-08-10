@@ -1,27 +1,21 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import HTTPException
 
 from app.models.registry import registry
-from app.schemas.predict import PredictionRequest, PredictionResponse
-
-router = APIRouter(tags=["Predictions"])
 
 
-@router.post("/predict/{model_name}", response_model=PredictionResponse)
-def predict(model_name: str, request: PredictionRequest):
-    """Run inference on a loaded ML model.
+def make_predict_handler(model_name: str, request_model: type):
+    """Return a FastAPI route handler bound to a specific model.
 
-    Provide feature values as a JSON object. Use GET /models/{model_name}
-    to see required features and their descriptions.
+    Request logging happens in the log_predict_requests middleware, which
+    sees the real status code — handlers stay pure inference.
     """
-    if model_name not in registry.list_models():
-        raise HTTPException(
-            status_code=404,
-            detail=f"Model '{model_name}' not found. Available models: {registry.list_models()}",
-        )
 
-    try:
-        result = registry.predict(model_name, request.features)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+    async def predict(request: request_model):
+        try:
+            return registry.predict(model_name, request.model_dump())
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
 
-    return result
+    # Give each handler a unique name so FastAPI generates distinct operation IDs
+    predict.__name__ = model_name
+    return predict

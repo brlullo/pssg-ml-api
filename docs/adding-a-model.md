@@ -11,7 +11,10 @@ app/models/artifacts/<model_name>/
 ```
 
 The folder name (`<model_name>`) becomes the API identifier:
-`POST /predict/<model_name>`, `GET /models/<model_name>`.
+`POST /predict/<model_name>`, `GET /models/<model_name>`. At startup the API
+generates a dedicated, typed prediction endpoint for the model — the request
+body is a flat JSON object with one field per feature, and Swagger (`/docs`)
+gets a pre-filled example built from the metadata.
 
 ## 1. Export the pickle
 
@@ -51,7 +54,8 @@ with open("model.pkl", "wb") as f:
 The API serves this verbatim at `GET /models/<model_name>`, and the web UI
 builds the input form from `features[]` — so `type` and `description` must be
 accurate. `type` is `"binary"` (rendered as Yes/No) or `"continuous"`
-(rendered as a number input). `metrics.optimal_threshold` is used as the
+(rendered as a number input). `example_value` (optional) seeds the Swagger
+example for continuous features. `metrics.optimal_threshold` is used as the
 classification cutoff (defaults to 0.5 if omitted).
 
 Template:
@@ -72,7 +76,8 @@ Template:
     {
       "name": "another_feature",
       "type": "continuous",
-      "description": "What this feature means, incl. units"
+      "description": "What this feature means, incl. units",
+      "example_value": 42.0
     }
   ],
   "metrics": {
@@ -105,8 +110,10 @@ uvicorn app.main:app --reload  # then check:
 
 - `GET /models` lists the new model
 - The web UI at `/` shows a card for it and generates the correct form
-- `POST /predict/<model_name>` with a full feature set returns a probability
-- A request with missing features returns a 422 naming them
+- `/docs` shows a dedicated endpoint for the model with a pre-filled example
+- `POST /predict/<model_name>` with a flat JSON body of feature values
+  returns a probability
+- A request with missing features returns a 422 naming the missing fields
 
 Commit the folder (model pickles in `app/models/artifacts/` are tracked in
 git) and push — Render redeploys and the model is live.

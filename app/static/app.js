@@ -178,13 +178,21 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch("/predict/" + encodeURIComponent(currentModel.name), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ features }),
+      body: JSON.stringify(features),
     });
     const body = await res.json();
     if (!res.ok) {
-      const detail = typeof body.detail === "string"
-        ? body.detail
-        : "The server could not process this request.";
+      let detail;
+      if (typeof body.detail === "string") {
+        detail = body.detail;
+      } else if (Array.isArray(body.detail)) {
+        // FastAPI validation errors: [{loc: [...], msg: ...}, ...]
+        detail = body.detail
+          .map((d) => prettyName(String((d.loc || []).slice(-1)[0] || "input")) + ": " + d.msg)
+          .join("; ");
+      } else {
+        detail = "The server could not process this request.";
+      }
       formError.textContent = detail;
       formError.hidden = false;
       return;

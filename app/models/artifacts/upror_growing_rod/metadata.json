@@ -13,7 +13,8 @@
     {
       "name": "Pre-Index_Height_cm",
       "type": "continuous",
-      "description": "Patient height in cm"
+      "description": "Patient height in cm",
+      "example_value": 110.0
     },
     {
       "name": "Post-Index_Device_Type_VEPTR",
@@ -28,17 +29,20 @@
     {
       "name": "Pre-Index_Kyphosis",
       "type": "continuous",
-      "description": "Thoracic kyphosis angle in degrees"
+      "description": "Thoracic kyphosis angle in degrees",
+      "example_value": 40.0
     },
     {
       "name": "age_at_surgery",
       "type": "continuous",
-      "description": "Patient age in years at index surgery"
+      "description": "Patient age in years at index surgery",
+      "example_value": 6.0
     },
     {
       "name": "Post-Index_Number_of_Superior_Anchors",
       "type": "continuous",
-      "description": "Number of superior anchor points"
+      "description": "Number of superior anchor points",
+      "example_value": 2.0
     },
     {
       "name": "Gender_Male",
