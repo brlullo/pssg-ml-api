@@ -285,6 +285,8 @@ form.addEventListener("submit", async (e) => {
 
 function showScenarioResult(r) {
   scenarioGrid.innerHTML = "";
+  // The grid's two-column layout is for cards; a table needs the full width
+  scenarioGrid.classList.toggle("table-mode", !!r.scenarios[0].by_level);
   if (r.scenarios[0].by_level) {
     renderScenarioTable(r);
   } else {

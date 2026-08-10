@@ -231,6 +231,7 @@ details#model-info td:first-child { color: var(--text-muted); white-space: nowra
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
+.scenario-grid.table-mode { display: block; }
 
 .scenario-card {
   border: 1px solid var(--border);
@@ -279,7 +280,11 @@ details#model-info td:first-child { color: var(--text-muted); white-space: nowra
   vertical-align: top;
 }
 .scenario-table .level-name { font-weight: 600; white-space: nowrap; }
-.scenario-table .ci { font-size: 0.8rem; color: var(--text-muted); }
+.scenario-table .ci {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
 .scenario-table .diff-lower { color: #1a7a3a; font-weight: 600; }
 .scenario-table .diff-higher { color: var(--text); font-weight: 600; }
 
