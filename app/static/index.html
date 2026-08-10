@@ -45,7 +45,12 @@
           <div class="bar-fill" id="result-bar"></div>
           <div class="bar-threshold" id="result-threshold-mark"></div>
         </div>
+        <div class="bar-ticks" aria-hidden="true">
+          <span>0%</span><span>50%</span><span>100%</span>
+        </div>
         <p id="result-interpretation"></p>
+        <p id="result-note" class="result-note" hidden></p>
+        <button type="button" id="copy-summary" class="secondary-button">Copy summary</button>
       </section>
 
       <section id="scenario-result" hidden aria-live="polite">

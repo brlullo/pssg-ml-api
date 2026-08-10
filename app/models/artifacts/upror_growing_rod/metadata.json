@@ -50,6 +50,43 @@
       "description": "Male (1) vs Female (0)"
     }
   ],
+  "ui": {
+    "groups": [
+      {
+        "title": "Patient Features",
+        "fields": [
+          {"label": "Age at Initial Surgery (years)", "control": "number", "feature": "age_at_surgery"},
+          {"label": "Sex", "control": "select", "options": [
+            {"label": "Female", "set": {"Gender_Male": 0}},
+            {"label": "Male", "set": {"Gender_Male": 1}}
+          ]},
+          {"label": "Pre-operative Height (cm)", "control": "number", "feature": "Pre-Index_Height_cm"}
+        ]
+      },
+      {
+        "title": "Radiographic Features",
+        "fields": [
+          {"label": "Kyphosis (degrees)", "control": "number", "feature": "Pre-Index_Kyphosis"}
+        ]
+      },
+      {
+        "title": "Construct Features",
+        "fields": [
+          {"label": "Device Type", "control": "select", "options": [
+            {"label": "MCGR", "set": {"Post-Index_Device_Type_VEPTR": 0, "Post-Index_Device_Type_TGR": 0}},
+            {"label": "TGR", "set": {"Post-Index_Device_Type_VEPTR": 0, "Post-Index_Device_Type_TGR": 1}},
+            {"label": "VEPTR", "set": {"Post-Index_Device_Type_VEPTR": 1, "Post-Index_Device_Type_TGR": 0}}
+          ]},
+          {"label": "Superior Anchors", "control": "number", "feature": "Post-Index_Number_of_Superior_Anchors"},
+          {"label": "Inferior Attachment", "control": "select", "options": [
+            {"label": "Spine Based", "set": {"Post-Index_Inferior_Attachments_Spine_Based": 1}},
+            {"label": "Pelvic Hooks", "set": {"Post-Index_Inferior_Attachments_Spine_Based": 0}}
+          ]}
+        ]
+      }
+    ],
+    "result_note": "The decision threshold (40.3%) was chosen via Youden's J, which maximizes sensitivity + specificity − 1 on the held-out test set. Cohort UPROR prevalence: 34.9%."
+  },
   "metrics": {
     "test_auc": 0.6502,
     "cv_auc": 0.6566,

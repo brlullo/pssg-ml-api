@@ -20,6 +20,8 @@ const resultThresholdMark = document.getElementById("result-threshold-mark");
 const resultInterpretation = document.getElementById("result-interpretation");
 
 let currentModel = null; // detail payload for the selected model
+let lastInputSummary = []; // "label: value" lines from the last submit
+let lastResultSummary = ""; // one-line result from the last prediction
 
 function prettyName(name) {
   return name
@@ -74,7 +76,7 @@ async function showDetail(name) {
   detailTitle.textContent = currentModel.display_name;
   detailDescription.textContent = currentModel.description;
   renderInfo(currentModel);
-  renderForm(currentModel.features);
+  renderForm(currentModel);
 
   resultEl.hidden = true;
   scenarioResultEl.hidden = true;
@@ -118,8 +120,53 @@ function renderInfo(m) {
   }
 }
 
-function renderForm(features) {
+function renderForm(m) {
   formFields.innerHTML = "";
+  if (m.ui && m.ui.groups) {
+    // Curated layout: named groups of display fields, each either a number
+    // input bound to one feature or a select whose options set feature values
+    for (const group of m.ui.groups) {
+      const heading = document.createElement("h4");
+      heading.className = "field-group-title";
+      heading.textContent = group.title;
+      formFields.appendChild(heading);
+      for (const df of group.fields) {
+        const wrap = document.createElement("div");
+        wrap.className = "field";
+        const label = document.createElement("label");
+        label.textContent = df.label;
+        wrap.appendChild(label);
+        let input;
+        if (df.control === "select") {
+          input = document.createElement("select");
+          for (const opt of df.options) {
+            const o = document.createElement("option");
+            o.textContent = opt.label;
+            o.value = JSON.stringify(opt.set);
+            input.appendChild(o);
+          }
+          input.dataset.set = "1";
+        } else {
+          input = document.createElement("input");
+          input.type = "number";
+          input.step = "any";
+          input.inputMode = "decimal";
+          input.required = true;
+          input.placeholder = "Enter value";
+          input.dataset.feature = df.feature;
+        }
+        input.dataset.label = df.label;
+        label.htmlFor = input.id = "f-" + (df.feature || df.label.replace(/\W+/g, "_"));
+        wrap.appendChild(input);
+        formFields.appendChild(wrap);
+      }
+    }
+    return;
+  }
+  renderAutoForm(m.features);
+}
+
+function renderAutoForm(features) {
   for (const f of features) {
     const wrap = document.createElement("div");
     wrap.className = "field";
@@ -177,16 +224,27 @@ form.addEventListener("submit", async (e) => {
   scenarioResultEl.hidden = true;
 
   const features = {};
-  for (const input of formFields.querySelectorAll("[data-feature]")) {
+  lastInputSummary = [];
+  for (const input of formFields.querySelectorAll("[data-feature], [data-set]")) {
+    const label = input.dataset.label || prettyName(input.dataset.feature || "");
     if (input.value === "") {
-      formError.textContent =
-        "Please enter a value for “" + prettyName(input.dataset.feature) + "”.";
+      formError.textContent = "Please enter a value for “" + label + "”.";
       formError.hidden = false;
       input.focus();
       return;
     }
-    features[input.dataset.feature] =
-      input.dataset.kind === "categorical" ? input.value : Number(input.value);
+    if (input.dataset.set) {
+      // Composite select: its options carry {feature: value} assignments
+      Object.assign(features, JSON.parse(input.value));
+      lastInputSummary.push(label + ": " + input.options[input.selectedIndex].text);
+    } else {
+      features[input.dataset.feature] =
+        input.dataset.kind === "categorical" ? input.value : Number(input.value);
+      const shown = input.tagName === "SELECT"
+        ? input.options[input.selectedIndex].text
+        : input.value;
+      lastInputSummary.push(label + ": " + shown);
+    }
   }
 
   submitButton.disabled = true;
@@ -268,9 +326,41 @@ function showResult(r) {
     ", so the model classifies this patient as " +
     (above ? "higher" : "lower") + " risk. (Model: " +
     r.model_name + " v" + r.model_version + ")";
+
+  const note = document.getElementById("result-note");
+  const noteText = currentModel && currentModel.ui && currentModel.ui.result_note;
+  note.textContent = noteText || "";
+  note.hidden = !noteText;
+
+  lastResultSummary =
+    "Predicted UPROR probability: " + fmtPct(r.probability) +
+    " (" + (above ? "above" : "below") + " decision threshold of " +
+    fmtPct(r.threshold) + ")";
+
   resultEl.hidden = false;
   resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
+
+document.getElementById("copy-summary").addEventListener("click", async (e) => {
+  const text = [
+    currentModel.display_name + " (" + currentModel.name + " v" + currentModel.version + ")",
+    "",
+    "Inputs:",
+    ...lastInputSummary.map((l) => "  " + l),
+    "",
+    lastResultSummary,
+    "",
+    "Research use only — not a substitute for clinical judgment.",
+  ].join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    e.target.textContent = "Copied!";
+    setTimeout(() => { e.target.textContent = "Copy summary"; }, 1500);
+  } catch {
+    e.target.textContent = "Copy failed";
+    setTimeout(() => { e.target.textContent = "Copy summary"; }, 1500);
+  }
+});
 
 backButton.addEventListener("click", () => {
   detailEl.hidden = true;

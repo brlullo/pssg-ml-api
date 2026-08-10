@@ -16,6 +16,17 @@ def test_get_model_detail(client):
     assert "test_auc" in data["metrics"]
 
 
+def test_upror_detail_includes_ui_config(client):
+    data = client.get("/models/upror_growing_rod").json()
+    assert data["ui"] is not None
+    titles = [g["title"] for g in data["ui"]["groups"]]
+    assert titles == ["Patient Features", "Radiographic Features", "Construct Features"]
+    device = next(
+        f for g in data["ui"]["groups"] for f in g["fields"] if f["label"] == "Device Type"
+    )
+    assert [o["label"] for o in device["options"]] == ["MCGR", "TGR", "VEPTR"]
+
+
 def test_get_model_not_found(client):
     response = client.get("/models/nonexistent_model")
     assert response.status_code == 404
