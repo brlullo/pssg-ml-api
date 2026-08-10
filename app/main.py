@@ -1,12 +1,19 @@
+import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.background import BackgroundTask
 
 from app.config import settings
-from app.logging.db import get_usage_stats
+from app.logging.db import get_usage_stats, init_db, log_request
 from app.models.registry import registry
 from app.routers import models_info, predict
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 @asynccontextmanager
@@ -14,6 +21,10 @@ async def lifespan(app: FastAPI):
     registry.load_all()
     loaded = registry.list_models()
     print(f"Loaded {len(loaded)} model(s): {loaded}")
+    try:
+        init_db()
+    except Exception as e:
+        print(f"[logging] could not initialize log database: {e}")
     yield
 
 
@@ -31,17 +42,50 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def log_predict_requests(request: Request, call_next):
+    """Log every /predict/* request with its real status code (200, 404, 422, 500)."""
+    if not request.url.path.startswith("/predict/"):
+        return await call_next(request)
+
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+
+    model_name = request.url.path.removeprefix("/predict/").strip("/")
+    task = BackgroundTask(
+        log_request, model_name, request.url.path, elapsed_ms, response.status_code
+    )
+    # Chain rather than clobber any background task set by the endpoint
+    if response.background is None:
+        response.background = task
+    else:
+        existing = response.background
+        response.background = BackgroundTask(
+            lambda: (existing(), task())
+        )
+    return response
+
+
 app.include_router(predict.router)
 app.include_router(models_info.router)
 
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-@app.get("/", tags=["Info"])
-def root():
+
+@app.get("/", include_in_schema=False)
+def home():
+    """Web interface for interacting with the models."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/api", tags=["Info"])
+def api_info():
     """API root with basic information and links."""
     return {
         "name": "PSSG ML API",
@@ -58,7 +102,13 @@ def health():
     return {"status": "healthy", "models_loaded": len(registry.list_models())}
 
 
-@app.get("/admin/usage", tags=["Admin"])
+def require_admin(x_api_key: str | None = Header(default=None)):
+    """Require X-API-Key when ADMIN_API_KEY is configured; open in local dev."""
+    if settings.ADMIN_API_KEY and x_api_key != settings.ADMIN_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing X-API-Key")
+
+
+@app.get("/admin/usage", tags=["Admin"], dependencies=[Depends(require_admin)])
 def usage():
     """API usage statistics: total queries, per-model counts, monthly trends."""
     return get_usage_stats()

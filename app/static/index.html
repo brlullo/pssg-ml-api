@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSSG ML Models</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>PSSG ML Models</h1>
+      <p class="subtitle">
+        Clinical prediction models from the Pediatric Spine Study Group database
+      </p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="model-list" aria-label="Available models">
+      <p class="loading">Loading models&hellip;</p>
+    </section>
+
+    <section id="model-detail" hidden>
+      <button id="back-button" type="button">&larr; All models</button>
+      <h2 id="detail-title"></h2>
+      <p id="detail-description"></p>
+
+      <details id="model-info">
+        <summary>Model details &amp; performance</summary>
+        <div id="model-info-body"></div>
+      </details>
+
+      <form id="predict-form" novalidate>
+        <h3>Patient characteristics</h3>
+        <div id="form-fields"></div>
+        <p id="form-error" class="error" role="alert" hidden></p>
+        <button type="submit" id="submit-button">Calculate risk</button>
+      </form>
+
+      <section id="result" hidden aria-live="polite">
+        <h3>Predicted risk</h3>
+        <p class="probability"><span id="result-pct"></span></p>
+        <div class="bar-track">
+          <div class="bar-fill" id="result-bar"></div>
+          <div class="bar-threshold" id="result-threshold-mark"></div>
+        </div>
+        <p id="result-interpretation"></p>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>
+        <strong>Research use only.</strong> These models are provided for research and
+        usability evaluation. Output is not medical advice and is not a substitute for
+        clinical judgment.
+      </p>
+      <p class="footer-links">
+        <a href="/docs">API documentation</a> &middot;
+        <a href="/api">API info</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
